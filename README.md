@@ -52,3 +52,7 @@ La aplicación utiliza Tkinter por lo que se abre una ventana similar a la sigui
 ![Captura de ejemplo](docs/captura_ejemplo.png)
 
 En ella se completan los parámetros y se inicia la recolección.
+
+## Uso ético
+
+Utiliza esta herramienta únicamente para fines legales y con el permiso de los sitios que scrapees. El uso indebido puede violar los términos de servicio de las páginas y la legislación vigente.
