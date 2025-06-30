@@ -2,10 +2,33 @@ from bs4 import BeautifulSoup
 import re
 import requests
 from selenium.webdriver.common.by import By
+from fake_useragent import UserAgent
+from logs.descargas_log import registrar_error
 
 
-def extraer_ficha(driver, provincia: str, localidad: str, categoria: str,
-                   palabra_clave: str, pais: str) -> dict:
+def _obtener_user_agent(custom_ua: str | None = None) -> str:
+    """Devuelve un User-Agent válido."""
+    if custom_ua:
+        return custom_ua
+    try:
+        return UserAgent().random
+    except Exception:
+        return (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0 Safari/537.36"
+        )
+
+
+def extraer_ficha(
+    driver,
+    provincia: str,
+    localidad: str,
+    categoria: str,
+    palabra_clave: str,
+    pais: str,
+    user_agent: str | None = None,
+) -> dict:
     """Extrae los datos de la ficha de un negocio abierto en el driver."""
     name = driver.find_element(By.CSS_SELECTOR, "h1.DUwDvf").text
     address = ""
@@ -29,13 +52,14 @@ def extraer_ficha(driver, provincia: str, localidad: str, categoria: str,
 
     email = ""
     if website:
+        headers = {"User-Agent": _obtener_user_agent(user_agent)}
         try:
-            response = requests.get(website, timeout=5)
+            response = requests.get(website, timeout=5, headers=headers)
             soup = BeautifulSoup(response.text, "html.parser")
             emails = re.findall(r"[\w\.-]+@[\w\.-]+", soup.get_text())
             email = emails[0] if emails else ""
-        except Exception:
-            pass
+        except requests.RequestException as e:
+            registrar_error(website, e)
 
     return {
         "Name": name,
