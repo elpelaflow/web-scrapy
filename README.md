@@ -24,6 +24,19 @@ Se abrirá una ventana donde deberás ingresar el país, la categoría y la pala
 
 Cuando la búsqueda finalice se mostrará la ubicación del archivo exportado junto con la cantidad de registros.
 
+## Uso por línea de comandos
+
+Además de la interfaz gráfica puedes ejecutar el scraper desde la terminal. Los
+parámetros disponibles son equivalentes a los de la ventana de la aplicación.
+
+```bash
+python cli.py --pais Argentina --categoria "Restaurantes" \
+    --palabra pizza --limite 50 --formato csv --ruta-salida salida.csv
+```
+
+El argumento `--formato` acepta `csv`, `excel`, `json` o `xml`. Con `--ruta-salida`
+puedes definir la ubicación y nombre del archivo generado.
+
 ## Flujo de trabajo del scraper
 
 1. **`navegador.py`** configura el *webdriver* de Selenium.
