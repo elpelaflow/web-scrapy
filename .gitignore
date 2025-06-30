@@ -1,0 +1,51 @@
+# Ignorar el .env que vive dentro de /config
+config/.env
+
+# 🛑 Archivos sensibles
+.env
+*.env
+.env*
+
+# 🧠 Memoria del bot
+memoria.db
+backups/
+*.zip
+*.xlsx
+*.csv
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 🔥 Entorno virtual
+venv/
+ENV/
+env/
+.venv/
+
+# 🧪 Pytest y cobertura
+.coverage
+.cache/
+htmlcov/
+.tox/
+pytest_cache/
+
+# 🚀 VSCode u otros IDEs
+.vscode/
+.idea/
+
+# ⚙️ Logs o debug
+*.log
+logs/
+*.tmp
+
+# 🔧 Otros archivos innecesarios
+.DS_Store
+Thumbs.db
+
+# 🛡️ memorias
+memoria.db
+memoria.db-shm
+memoria.db-wal
