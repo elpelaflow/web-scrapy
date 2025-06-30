@@ -10,3 +10,4 @@ def crear_driver(headless: bool = True) -> webdriver.Chrome:
         options.add_argument("--headless")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     return driver
+    

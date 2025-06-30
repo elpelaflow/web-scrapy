@@ -49,3 +49,4 @@ def extraer_ficha(driver, provincia: str, localidad: str, categoria: str,
         "Keyword": palabra_clave,
         "Web Domain": website,
     }
+    

@@ -32,3 +32,4 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
     detectar_formato_y_exportar(data, ruta)
 
     return ruta, len(data)
+    

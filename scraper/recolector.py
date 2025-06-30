@@ -47,3 +47,4 @@ def recolectar_negocios(driver, pais: str, provincia: str, localidad: str,
             continue
 
     return data
+    

@@ -54,3 +54,4 @@ def detectar_formato_y_exportar(data: list[dict], ruta: str):
         ext = "csv"
         ruta = f"{ruta}.csv"
     exportar(data, formato=ext, ruta_salida=ruta)
+    
