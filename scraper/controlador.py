@@ -1,5 +1,6 @@
 from pathlib import Path
 import yaml
+from logs.debug_logger import logger
 
 from .navegador import crear_driver
 from .recolector import recolectar_negocios
@@ -28,6 +29,10 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
 
     headless = CONFIG.get("headless", True)
 
+    logger.info(
+        "Iniciando scraping: %s, %s, %s, %s, %s", pais, provincia, localidad, categoria, palabra
+    )
+
     driver = crear_driver(headless=headless)
     try:
         data = recolectar_negocios(
@@ -44,6 +49,7 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
         driver.quit()
 
     detectar_formato_y_exportar(data, ruta)
-
+    logger.info("Exportado a %s: %s", formato, ruta)
+    
     return ruta, len(data)
     
