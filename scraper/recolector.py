@@ -8,14 +8,28 @@ from selenium.webdriver.support import expected_conditions as EC
 from .extractor import extraer_ficha
 
 
-def recolectar_negocios(driver, pais: str, provincia: str, localidad: str,
-                         categoria: str, palabra_clave: str, limite: int = 100) -> list[dict]:
-    """Navega por Google Maps y devuelve una lista de negocios."""
+def recolectar_negocios(
+    driver,
+    pais: str,
+    provincia: str,
+    localidad: str,
+    categoria: str,
+    palabra_clave: str,
+    limite: int = 100,
+    timeout: int = 10,
+) -> list[dict]:
+    """Navega por Google Maps y devuelve una lista de negocios.
+
+    Parameters
+    ----------
+    timeout : int
+        Segundos de espera para operaciones de Selenium.
+    """
     ubicacion = localidad or provincia or pais
     termino_busqueda = f"{categoria} {palabra_clave} en {ubicacion}"
 
     driver.get("https://www.google.com/maps")
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, timeout)
     time.sleep(3)
 
     search_box = driver.find_element(By.ID, "searchboxinput")

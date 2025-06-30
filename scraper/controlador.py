@@ -1,8 +1,14 @@
 from pathlib import Path
+import random
+import yaml
 
 from .navegador import crear_driver
 from .recolector import recolectar_negocios
 from export.exportador import detectar_formato_y_exportar
+
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    CONFIG = yaml.safe_load(f)
 
 
 def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
@@ -12,7 +18,7 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
     localidad = parametros.get("localidad", "")
     categoria = parametros.get("categoria")
     palabra = parametros.get("palabra")
-    limite = int(parametros.get("limite", 100))
+    limite = int(parametros.get("limite", CONFIG.get("limit", 100)))
 
     formato = parametros.get("formato", "csv")
     ruta = parametros.get(
@@ -21,10 +27,23 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
     )
     ruta = ruta.replace(" ", "_")
 
-    driver = crear_driver(headless=True)
+    user_agents = CONFIG.get("user_agents") or []
+    proxies = CONFIG.get("proxies") or []
+    user_agent = random.choice(user_agents) if user_agents else None
+    proxy = random.choice(proxies) if proxies else None
+    headless = CONFIG.get("headless", True)
+
+    driver = crear_driver(headless=headless, proxy=proxy, user_agent=user_agent)
     try:
         data = recolectar_negocios(
-            driver, pais, provincia, localidad, categoria, palabra, limite
+            driver,
+            pais,
+            provincia,
+            localidad,
+            categoria,
+            palabra,
+            limite,
+            timeout=CONFIG.get("timeout", 10),
         )
     finally:
         driver.quit()
