@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
-logs/
+logs/*.csv
+logs/__pycache__/
 data/resultados/
 .vscode/
 .env

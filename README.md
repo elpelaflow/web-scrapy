@@ -1,6 +1,6 @@
-# web-scrapy# WebScraper de Negocios
+# WebScraper de Negocios
 
-Scraper local de negocios desde Google Maps. Permite filtrar por categoría, palabra clave, ciudad, país y exportar en múltiples formatos.
+Aplicación para obtener datos de comercios desde Google Maps de forma sencilla. Permite filtrar por país, provincia, localidad y palabra clave de producto. Los resultados pueden exportarse a CSV, Excel, JSON o XML.
 
 ## Instalación
 
@@ -8,12 +8,34 @@ Scraper local de negocios desde Google Maps. Permite filtrar por categoría, pal
 git clone https://github.com/elpelaflow/web-scrapy.git
 cd web-scrapy
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate  # En Windows usar .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Ejecución
+## Uso rápido
+
+Ejecuta la aplicación con:
 
 ```bash
 python main.py
 ```
+
+Se abrirá una ventana donde deberás ingresar el país, la categoría y la palabra clave que desees buscar. Opcionalmente puedes indicar provincia, localidad y el número máximo de resultados.
+
+Cuando la búsqueda finalice se mostrará la ubicación del archivo exportado junto con la cantidad de registros.
+
+## Flujo de trabajo del scraper
+
+1. **`navegador.py`** configura el *webdriver* de Selenium.
+2. **`recolector.py`** realiza la navegación en Google Maps y obtiene las URLs de las fichas.
+3. **`extractor.py`** extrae la información de cada negocio abierto en el navegador.
+4. **`controlador.py`** orquesta todo el proceso y delega la exportación al módulo **`export/exportador.py`**.
+5. Los datos se guardan en la carpeta `data/resultados/` con el formato elegido.
+
+## Ejemplo de interfaz
+
+La aplicación utiliza Tkinter por lo que se abre una ventana similar a la siguiente:
+
+![Captura de ejemplo](docs/captura_ejemplo.png)
+
+En ella se completan los parámetros y se inicia la recolección.
