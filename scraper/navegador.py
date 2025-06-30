@@ -1,17 +1,27 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from pathlib import Path
+import itertools
+import yaml
+import undetected_chromedriver as uc
 
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
 
-def crear_driver(headless: bool = True, proxy: str | None = None, user_agent: str | None = None) -> webdriver.Chrome:
-    """Configura y devuelve una instancia de Chrome WebDriver."""
-    options = webdriver.ChromeOptions()
-    if headless:
+user_agent_pool = itertools.cycle(config.get("user_agents", []))
+proxy_pool = itertools.cycle(config.get("proxies", []))
+
+def crear_driver(headless: bool | None = None, proxy: str | None = None, user_agent: str | None = None) -> uc.Chrome:
+    """Devuelve una instancia de Chrome configurada con proxy y User-Agent rotativos."""
+    options = uc.ChromeOptions()
+    if headless if headless is not None else config.get("headless", True):
         options.add_argument("--headless")
+    if proxy is None and config.get("proxies"):
+        proxy = next(proxy_pool)
     if proxy:
         options.add_argument(f"--proxy-server={proxy}")
+    if user_agent is None and config.get("user_agents"):
+        user_agent = next(user_agent_pool)
     if user_agent:
-        options.add_argument(f"user-agent={user_agent}")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver
+        options.add_argument(f"--user-agent={user_agent}")
+    return uc.Chrome(options=options)
     

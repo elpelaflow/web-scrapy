@@ -1,5 +1,4 @@
 from pathlib import Path
-import random
 import yaml
 
 from .navegador import crear_driver
@@ -27,13 +26,9 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
     )
     ruta = ruta.replace(" ", "_")
 
-    user_agents = CONFIG.get("user_agents") or []
-    proxies = CONFIG.get("proxies") or []
-    user_agent = random.choice(user_agents) if user_agents else None
-    proxy = random.choice(proxies) if proxies else None
     headless = CONFIG.get("headless", True)
 
-    driver = crear_driver(headless=headless, proxy=proxy, user_agent=user_agent)
+    driver = crear_driver(headless=headless)
     try:
         data = recolectar_negocios(
             driver,

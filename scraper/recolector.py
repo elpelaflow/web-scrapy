@@ -5,6 +5,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from .extractor import extraer_ficha
+from .utils import backoff_retry
+
+
+@backoff_retry
+def _navegar(driver, url: str) -> None:
+    driver.get(url)
 
 
 def recolectar_negocios(
@@ -27,7 +33,7 @@ def recolectar_negocios(
     ubicacion = localidad or provincia or pais
     termino_busqueda = f"{categoria} {palabra_clave} en {ubicacion}"
 
-    driver.get("https://www.google.com/maps")
+    _navegar(driver, "https://www.google.com/maps")
     wait = WebDriverWait(driver, timeout)
     time.sleep(3)
 
