@@ -11,7 +11,7 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     CONFIG = yaml.safe_load(f)
 
 
-def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
+def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
     """Ejecuta todo el flujo de scraping y exportación."""
     pais = parametros.get("pais")
     provincia = parametros.get("provincia", "")
@@ -44,12 +44,13 @@ def ejecutar_scraper(parametros: dict) -> tuple[str, int]:
             palabra,
             limite,
             timeout=CONFIG.get("timeout", 10),
+            callback=callback,
         )
     finally:
         driver.quit()
 
     detectar_formato_y_exportar(data, ruta)
     logger.info("Exportado a %s: %s", formato, ruta)
-    
+
     return ruta, len(data)
     

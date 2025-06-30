@@ -22,6 +22,7 @@ def recolectar_negocios(
     palabra_clave: str,
     limite: int = 100,
     timeout: int = 10,
+    callback=None,
 ) -> list[dict]:
     """Navega por Google Maps y devuelve una lista de negocios.
 
@@ -29,6 +30,9 @@ def recolectar_negocios(
     ----------
     timeout : int
         Segundos de espera para operaciones de Selenium.
+    callback : callable | None
+        Función llamada al completar cada ficha. Recibe el item,
+        la cantidad recolectada y el límite establecido.
     """
     ubicacion = localidad or provincia or pais
     termino_busqueda = f"{categoria} {palabra_clave} en {ubicacion}"
@@ -98,6 +102,8 @@ def recolectar_negocios(
                 driver, provincia, localidad, categoria, palabra_clave, pais
             )
             data.append(item)
+            if callback:
+                callback(item, len(data), limite)
             driver.back()
             time.sleep(2)
         except Exception:

@@ -51,11 +51,37 @@ class ScraperApp:
         self.limite_entry.pack()
 
         # --- Botón de búsqueda ---
-        buscar_btn = tk.Button(root, text="Iniciar búsqueda", command=self.iniciar_busqueda_thread)
-        buscar_btn.pack(pady=20)
+        self.buscar_btn = tk.Button(
+            root, text="Iniciar búsqueda", command=self.iniciar_busqueda_thread
+        )
+        self.buscar_btn.pack(pady=20)
+
+        # --- Barra de progreso ---
+        self.progress = ttk.Progressbar(root, length=400, mode="determinate")
+        self.progress.pack(pady=(0, 10))
+
+        # --- Área de log ---
+        self.log_text = tk.Text(root, height=8, state="disabled")
+        self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
     def iniciar_busqueda_thread(self):
-        threading.Thread(target=self.iniciar_busqueda).start()
+        self.buscar_btn.config(state=tk.DISABLED)
+        self.progress["value"] = 0
+        self.log_text.config(state="normal")
+        self.log_text.delete("1.0", tk.END)
+        self.log_text.config(state="disabled")
+        threading.Thread(target=self.iniciar_busqueda, daemon=True).start()
+
+    def progress_callback(self, item, cantidad, limite):
+        self.root.after(0, self._update_progress, cantidad, limite)
+
+    def _update_progress(self, cantidad, limite):
+        self.progress["maximum"] = limite
+        self.progress["value"] = cantidad
+        self.log_text.config(state="normal")
+        self.log_text.insert(tk.END, f"Ficha {cantidad}/{limite} completada\n")
+        self.log_text.see(tk.END)
+        self.log_text.config(state="disabled")
 
     def iniciar_busqueda(self):
         pais = self.pais_var.get().strip()
@@ -85,11 +111,15 @@ class ScraperApp:
         }
 
         try:
-            archivo, cantidad = ejecutar_scraper(parametros)
+            archivo, cantidad = ejecutar_scraper(parametros, callback=self.progress_callback)
             registrar_log(pais, provincia, localidad, categoria, palabra, limite, archivo, cantidad)
-            messagebox.showinfo("Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}")
+            messagebox.showinfo(
+                "Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}"
+            )
         except Exception as e:
             messagebox.showerror("Error durante el scraping", str(e))
+        finally:
+            self.buscar_btn.config(state=tk.NORMAL)
 
 
 def iniciar_ui():
@@ -101,4 +131,3 @@ def iniciar_ui():
 
 if __name__ == "__main__":
     iniciar_ui()
-    
