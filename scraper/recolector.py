@@ -1,4 +1,5 @@
 import time
+import math
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -19,18 +20,24 @@ def recolectar_negocios(driver, pais: str, provincia: str, localidad: str,
     search_box.send_keys(Keys.ENTER)
     time.sleep(5)
 
-    # Realizar scroll para cargar resultados
+    # Realizar scroll para cargar más resultados en la lista lateral
     try:
         scrollable_div = driver.find_element(By.CSS_SELECTOR, "div.m6QErb")
-        for _ in range(3):
+        # Calculamos la cantidad de scrolls aproximados asumiendo que cada uno
+        # carga alrededor de 10 nuevos negocios
+        num_scrolls = math.ceil(limite / 10)
+        for _ in range(num_scrolls):
             driver.execute_script(
-                "arguments[0].scrollTop = arguments[0].scrollHeight", scrollable_div
+                "arguments[0].scrollTop = arguments[0].scrollHeight",
+                scrollable_div,
             )
-            time.sleep(3)
+            time.sleep(2)
     except Exception:
+        # Si el contenedor no se encuentra continuamos sin lanzar error
         pass
 
-    results = driver.find_elements(By.CSS_SELECTOR, "div.Nv2PK")
+    # Cada resultado suele estar en un contenedor con el rol "article"
+    results = driver.find_elements(By.CSS_SELECTOR, "div[role='article']")
     data = []
 
     for result in results[:limite]:
