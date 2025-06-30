@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
-from scraper.maps_scraper import buscar_negocios
+from scraper import ejecutar_scraper
 from logs.solicitudes_log import registrar_log
 
 import sys
@@ -75,15 +75,29 @@ class ScraperApp:
             messagebox.showerror("Error", "El límite debe ser un número entero.")
             return
 
+        parametros = {
+            "pais": pais,
+            "provincia": provincia,
+            "localidad": localidad,
+            "categoria": categoria,
+            "palabra": palabra,
+            "limite": limite,
+        }
+
         try:
-            archivo, cantidad = buscar_negocios(pais, provincia, localidad, categoria, palabra, limite)
+            archivo, cantidad = ejecutar_scraper(parametros)
             registrar_log(pais, provincia, localidad, categoria, palabra, limite, archivo, cantidad)
             messagebox.showinfo("Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}")
         except Exception as e:
             messagebox.showerror("Error durante el scraping", str(e))
 
 
-if __name__ == "__main__":
+def iniciar_ui():
+    """Punto de entrada para la interfaz gráfica."""
     root = tk.Tk()
     app = ScraperApp(root)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    iniciar_ui()

@@ -44,3 +44,13 @@ def exportar(data: list[dict], formato: str, ruta_salida: str):
         exportar_xml(data, ruta_salida)
     else:
         raise ValueError(f"Formato no soportado: {formato}")
+
+
+def detectar_formato_y_exportar(data: list[dict], ruta: str):
+    """Detecta el formato a partir de la extensión y exporta."""
+    ext = os.path.splitext(ruta)[1].lower().lstrip(".")
+    if not ext:
+        # Valor por defecto
+        ext = "csv"
+        ruta = f"{ruta}.csv"
+    exportar(data, formato=ext, ruta_salida=ruta)
