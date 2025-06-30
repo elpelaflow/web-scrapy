@@ -1,5 +1,9 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
+from tkinter.ttk import Treeview
+import pandas as pd
+import json
+from pathlib import Path
 import threading
 from scraper import ejecutar_scraper
 from logs.solicitudes_log import registrar_log
@@ -13,56 +17,95 @@ class ScraperApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Scraper de Negocios")
-        self.root.geometry("500x450")
+        self.root.geometry("600x500")
+
+        data_path = Path(__file__).resolve().parent.parent / "data" / "provincias.json"
+        with open(data_path, "r", encoding="utf-8") as f:
+            self.paises_dict = json.load(f)
+
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(fill="both", expand=True)
+
+        self.busqueda_frame = ttk.Frame(self.notebook)
+        self.historial_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.busqueda_frame, text="Buscar")
+        self.notebook.add(self.historial_frame, text="Historial")
 
         # --- País ---
-        tk.Label(root, text="País *").pack(pady=(10, 0))
-        self.pais_var = tk.StringVar(value="Argentina")
-        pais_menu = ttk.Combobox(root, textvariable=self.pais_var, state="readonly")
-        pais_menu['values'] = ["Argentina"]
-        pais_menu.pack()
+        tk.Label(self.busqueda_frame, text="País *").pack(pady=(10, 0))
+        self.pais_var = tk.StringVar(value=list(self.paises_dict.keys())[0])
+        self.pais_menu = ttk.Combobox(
+            self.busqueda_frame,
+            textvariable=self.pais_var,
+            state="readonly",
+            values=list(self.paises_dict.keys()),
+        )
+        self.pais_menu.pack()
+        self.pais_menu.bind("<<ComboboxSelected>>", self.actualizar_provincias)
 
         # --- Provincia ---
-        tk.Label(root, text="Provincia").pack(pady=(10, 0))
+        tk.Label(self.busqueda_frame, text="Provincia").pack(pady=(10, 0))
         self.provincia_var = tk.StringVar()
-        self.provincia_menu = ttk.Combobox(root, textvariable=self.provincia_var)
-        self.provincia_menu['values'] = ["", "Buenos Aires", "Córdoba", "Santa Fe", "Mendoza"]
+        self.provincia_menu = ttk.Combobox(self.busqueda_frame, textvariable=self.provincia_var, state="readonly")
         self.provincia_menu.pack()
 
         # --- Localidad ---
-        tk.Label(root, text="Localidad").pack(pady=(10, 0))
-        self.localidad_entry = tk.Entry(root)
+        tk.Label(self.busqueda_frame, text="Localidad").pack(pady=(10, 0))
+        self.localidad_entry = tk.Entry(self.busqueda_frame)
         self.localidad_entry.pack()
 
         # --- Categoría de Negocio ---
-        tk.Label(root, text="Categoría de negocio *").pack(pady=(10, 0))
-        self.categoria_entry = tk.Entry(root)
+        tk.Label(self.busqueda_frame, text="Categoría de negocio *").pack(pady=(10, 0))
+        self.categoria_entry = tk.Entry(self.busqueda_frame)
         self.categoria_entry.pack()
 
         # --- Palabra clave de producto ---
-        tk.Label(root, text="Palabra clave de producto *").pack(pady=(10, 0))
-        self.palabra_entry = tk.Entry(root)
+        tk.Label(self.busqueda_frame, text="Palabra clave de producto *").pack(pady=(10, 0))
+        self.palabra_entry = tk.Entry(self.busqueda_frame)
         self.palabra_entry.pack()
 
         # --- Límite máximo ---
-        tk.Label(root, text="Límite máximo de resultados").pack(pady=(10, 0))
-        self.limite_entry = tk.Entry(root)
+        tk.Label(self.busqueda_frame, text="Límite máximo de resultados").pack(pady=(10, 0))
+        self.limite_entry = tk.Entry(self.busqueda_frame)
         self.limite_entry.insert(0, "100")
         self.limite_entry.pack()
 
+        # --- Formato de salida ---
+        tk.Label(self.busqueda_frame, text="Formato de exportación").pack(pady=(10, 0))
+        self.formato_var = tk.StringVar(value="csv")
+        self.formato_menu = ttk.Combobox(
+            self.busqueda_frame,
+            textvariable=self.formato_var,
+            state="readonly",
+            values=["csv", "excel", "json", "xml"],
+        )
+        self.formato_menu.pack()
+
+        # --- Carpeta de salida ---
+        self.ruta_var = tk.StringVar()
+        tk.Button(
+            self.busqueda_frame,
+            text="Seleccionar carpeta...",
+            command=self.seleccionar_carpeta,
+        ).pack(pady=(10, 0))
+        ttk.Label(self.busqueda_frame, textvariable=self.ruta_var).pack()
+
         # --- Botón de búsqueda ---
         self.buscar_btn = tk.Button(
-            root, text="Iniciar búsqueda", command=self.iniciar_busqueda_thread
+            self.busqueda_frame, text="Iniciar búsqueda", command=self.iniciar_busqueda_thread
         )
         self.buscar_btn.pack(pady=20)
 
         # --- Barra de progreso ---
-        self.progress = ttk.Progressbar(root, length=400, mode="determinate")
+        self.progress = ttk.Progressbar(self.busqueda_frame, length=400, mode="determinate")
         self.progress.pack(pady=(0, 10))
 
         # --- Área de log ---
-        self.log_text = tk.Text(root, height=8, state="disabled")
+        self.log_text = tk.Text(self.busqueda_frame, height=8, state="disabled")
         self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+        self.crear_historial()
+        self.actualizar_provincias()
 
     def iniciar_busqueda_thread(self):
         self.buscar_btn.config(state=tk.DISABLED)
@@ -83,6 +126,62 @@ class ScraperApp:
         self.log_text.see(tk.END)
         self.log_text.config(state="disabled")
 
+    def seleccionar_carpeta(self):
+        carpeta = filedialog.askdirectory()
+        if carpeta:
+            self.ruta_var.set(carpeta)
+
+    def actualizar_provincias(self, event=None):
+        pais = self.pais_var.get()
+        provincias = self.paises_dict.get(pais, [])
+        self.provincia_menu["values"] = [""] + provincias
+        self.provincia_var.set("")
+
+    def crear_historial(self):
+        self.history_columns = [
+            "Fecha",
+            "País",
+            "Provincia",
+            "Localidad",
+            "Categoría",
+            "Keyword",
+            "Resultados",
+            "Duración",
+        ]
+        self.tree = Treeview(self.historial_frame, columns=self.history_columns, show="headings")
+        for col in self.history_columns:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=100)
+        scrollbar = ttk.Scrollbar(self.historial_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        tk.Button(self.historial_frame, text="Refrescar", command=self.cargar_historial).pack(pady=5)
+        self.cargar_historial()
+
+    def cargar_historial(self):
+        ruta_log = Path("logs/solicitudes_log.csv")
+        if ruta_log.exists():
+            df = pd.read_csv(ruta_log)
+        else:
+            df = pd.DataFrame(columns=self.history_columns)
+        self.tree.delete(*self.tree.get_children())
+        for _, fila in df.iterrows():
+            self.tree.insert(
+                "",
+                "end",
+                values=[
+                    fila.get("Fecha y Hora", ""),
+                    fila.get("País", ""),
+                    fila.get("Provincia", ""),
+                    fila.get("Localidad", ""),
+                    fila.get("Categoría", ""),
+                    fila.get("Palabra Clave", ""),
+                    fila.get("Cantidad de Resultados", ""),
+                    fila.get("Runtime Seconds", ""),
+                ],
+            )
+    
     def iniciar_busqueda(self):
         pais = self.pais_var.get().strip()
         provincia = self.provincia_var.get().strip()
@@ -108,7 +207,10 @@ class ScraperApp:
             "categoria": categoria,
             "palabra": palabra,
             "limite": limite,
+            "formato": self.formato_var.get(),
         }
+        if self.ruta_var.get():
+            parametros["ruta_salida"] = self.ruta_var.get()
 
         try:
             archivo, cantidad = ejecutar_scraper(parametros, callback=self.progress_callback)

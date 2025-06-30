@@ -4,7 +4,7 @@ from logs.debug_logger import logger
 
 from .navegador import crear_driver
 from .recolector import recolectar_negocios
-from export.exportador import detectar_formato_y_exportar
+from export.exportador import exportar
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -21,10 +21,7 @@ def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
     limite = int(parametros.get("limite", CONFIG.get("limit", 100)))
 
     formato = parametros.get("formato", "csv")
-    ruta = parametros.get(
-        "ruta_salida",
-        f"data/resultados/{categoria}_{palabra}_{localidad or provincia or pais}.{formato}",
-    )
+    ruta = parametros.get("ruta_salida", "data/resultados")
     ruta = ruta.replace(" ", "_")
 
     headless = CONFIG.get("headless", True)
@@ -49,8 +46,8 @@ def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
     finally:
         driver.quit()
 
-    detectar_formato_y_exportar(data, ruta)
-    logger.info("Exportado a %s: %s", formato, ruta)
+    archivo = exportar(data, formato, ruta)
+    logger.info("Exportado a %s: %s", formato, archivo)
 
-    return ruta, len(data)
+    return archivo, len(data)
     
