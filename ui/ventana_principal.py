@@ -7,6 +7,9 @@ from pathlib import Path
 import threading
 from scraper import ejecutar_scraper
 from logs.solicitudes_log import registrar_log
+from logs.debug_logger import logger
+import yaml
+import traceback
 
 import sys
 import os
@@ -18,6 +21,12 @@ class ScraperApp:
         self.root = root
         self.root.title("Scraper de Negocios")
         self.root.geometry("600x500")
+
+        self.config_path = Path(__file__).resolve().parent.parent / "config.yaml"
+        with open(self.config_path, "r", encoding="utf-8") as f:
+            self.config = yaml.safe_load(f)
+        self._original_proxies = self.config.get("proxies", [])
+        self._original_user_agents = self.config.get("user_agents", [])
 
         data_path = Path(__file__).resolve().parent.parent / "data" / "provincias.json"
         with open(data_path, "r", encoding="utf-8") as f:
@@ -81,6 +90,31 @@ class ScraperApp:
         )
         self.formato_menu.pack()
 
+         # --- Opciones avanzadas ---
+        self.headless_var = tk.BooleanVar(value=self.config.get("headless", True))
+        tk.Checkbutton(
+            self.busqueda_frame,
+            text="Headless mode",
+            variable=self.headless_var,
+            command=self.guardar_config,
+        ).pack()
+
+        self.proxy_var = tk.BooleanVar(value=bool(self.config.get("proxies")))
+        tk.Checkbutton(
+            self.busqueda_frame,
+            text="Rotación de proxies",
+            variable=self.proxy_var,
+            command=self.guardar_config,
+        ).pack()
+
+        self.ua_var = tk.BooleanVar(value=bool(self.config.get("user_agents")))
+        tk.Checkbutton(
+            self.busqueda_frame,
+            text="Cambio de user-agent",
+            variable=self.ua_var,
+            command=self.guardar_config,
+        ).pack()
+
         # --- Carpeta de salida ---
         self.ruta_var = tk.StringVar()
         tk.Button(
@@ -130,6 +164,18 @@ class ScraperApp:
         carpeta = filedialog.askdirectory()
         if carpeta:
             self.ruta_var.set(carpeta)
+
+    def guardar_config(self):
+        self.config["headless"] = self.headless_var.get()
+        self.config["proxies"] = self._original_proxies if self.proxy_var.get() else []
+        self.config["user_agents"] = (
+            self._original_user_agents if self.ua_var.get() else []
+        )
+        try:
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(self.config, f, allow_unicode=True)
+        except Exception:
+            logger.exception("Error al guardar configuracion")
 
     def actualizar_provincias(self, event=None):
         pais = self.pais_var.get()
@@ -181,6 +227,28 @@ class ScraperApp:
                     fila.get("Runtime Seconds", ""),
                 ],
             )
+
+    def mostrar_error(self, exc: Exception):
+        logger.error("Fallo en la UI", exc_info=exc)
+        top = tk.Toplevel(self.root)
+        top.title("Error")
+        tk.Label(top, text=str(exc), fg="red").pack(padx=10, pady=10)
+
+        detalle = tk.Text(top, height=10)
+        detalle.insert(tk.END, traceback.format_exc())
+        detalle.config(state="disabled")
+
+        def toggle():
+            if detalle.winfo_viewable():
+                detalle.pack_forget()
+                btn.config(text="Ver detalles")
+            else:
+                detalle.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+                btn.config(text="Ocultar detalles")
+
+        btn = tk.Button(top, text="Ver detalles", command=toggle)
+        btn.pack(pady=(0, 10))
+        tk.Button(top, text="Cerrar", command=top.destroy).pack(pady=(0, 10))   
     
     def iniciar_busqueda(self):
         pais = self.pais_var.get().strip()
@@ -219,7 +287,7 @@ class ScraperApp:
                 "Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}"
             )
         except Exception as e:
-            messagebox.showerror("Error durante el scraping", str(e))
+            self.mostrar_error(e)
         finally:
             self.buscar_btn.config(state=tk.NORMAL)
 

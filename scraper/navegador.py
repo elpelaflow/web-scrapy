@@ -4,16 +4,21 @@ import yaml
 import undetected_chromedriver as uc
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    config = yaml.safe_load(f)
 
-user_agent_pool = itertools.cycle(config.get("user_agents", []))
-proxy_pool = itertools.cycle(config.get("proxies", []))
+
+def _load_config() -> dict:
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 def crear_driver(headless: bool | None = None, proxy: str | None = None, user_agent: str | None = None) -> uc.Chrome:
     """Devuelve una instancia de Chrome configurada con proxy y User-Agent rotativos."""
+    config = _load_config()
+    user_agent_pool = itertools.cycle(config.get("user_agents", []))
+    proxy_pool = itertools.cycle(config.get("proxies", []))
+
     options = uc.ChromeOptions()
-    if headless if headless is not None else config.get("headless", True):
+    headless_value = headless if headless is not None else config.get("headless", True)
+    if headless_value:
         options.add_argument("--headless")
     if proxy is None and config.get("proxies"):
         proxy = next(proxy_pool)
