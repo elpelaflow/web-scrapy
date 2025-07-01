@@ -290,7 +290,6 @@ class ScraperApp:
 
         try:
             archivo, cantidad = ejecutar_scraper(parametros, callback=self.progress_callback)
-            registrar_log(pais, provincia, localidad, categoria, palabra, limite, archivo, cantidad)
             messagebox.showinfo(
                 "Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}"
             )

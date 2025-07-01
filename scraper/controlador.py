@@ -1,6 +1,8 @@
 from pathlib import Path
 import yaml
+import time
 from logs.debug_logger import logger
+from logs.solicitudes_log import registrar_log
 
 from .navegador import crear_driver
 from .recolector import recolectar_negocios
@@ -35,6 +37,7 @@ def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
             categoria,
             palabra,
         )
+        start_time = time.time()
         driver = crear_driver(headless=headless)
         try:
             data = recolectar_negocios(
@@ -53,6 +56,19 @@ def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
 
         archivo = exportar(data, formato, ruta)
         logger.info("Exportado a %s: %s", formato, archivo)
+
+        duration = time.time() - start_time
+        registrar_log(
+            pais,
+            provincia,
+            localidad,
+            categoria,
+            palabra,
+            limite,
+            archivo,
+            len(data),
+            duration,
+        )
 
         return archivo, len(data)
     except Exception:
