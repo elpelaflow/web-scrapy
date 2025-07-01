@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import os
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from logs.debug_logger import logger
 
 def exportar_csv(data: list[dict], ruta: str):
@@ -32,10 +33,12 @@ def exportar_xml(data: list[dict], ruta: str, root_name="Negocios", item_name="N
     tree.write(ruta, encoding='utf-8', xml_declaration=True)
     logger.info("Exportado a XML: %s", ruta)
 
-def exportar(data: list[dict], formato: str, ruta: str) -> str:
+def exportar(data: list[dict], formato: str, ruta_base: str) -> str:
     """Exporta los datos al formato indicado en la carpeta dada."""
-    os.makedirs(ruta, exist_ok=True)
-    archivo = os.path.join(ruta, f"resultados.{formato}")
+    carpeta_resultados = os.path.join(ruta_base, "web-scrapy-resultados")
+    os.makedirs(carpeta_resultados, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    archivo = os.path.join(carpeta_resultados, f"resultados_{ts}.{formato}")
 
     if formato == "csv":
         exportar_csv(data, archivo)

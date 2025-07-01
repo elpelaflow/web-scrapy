@@ -22,6 +22,9 @@ class ScraperApp:
         self.root.title("Scraper de Negocios")
         self.root.geometry("600x500")
 
+        # Carpeta donde se guardarán los resultados
+        self.export_folder = None
+
         self.config_path = Path(__file__).resolve().parent.parent / "config.yaml"
         with open(self.config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
@@ -163,6 +166,7 @@ class ScraperApp:
     def seleccionar_carpeta(self):
         carpeta = filedialog.askdirectory()
         if carpeta:
+            self.export_folder = carpeta
             self.ruta_var.set(carpeta)
 
     def guardar_config(self):
@@ -277,8 +281,12 @@ class ScraperApp:
             "limite": limite,
             "formato": self.formato_var.get(),
         }
-        if self.ruta_var.get():
-            parametros["ruta_salida"] = self.ruta_var.get()
+        
+        ruta = getattr(self, "export_folder", None)
+        if not ruta:
+            messagebox.showwarning("Error", "Seleccioná primero la carpeta de destino")
+            return
+        parametros["ruta_salida"] = ruta
 
         try:
             archivo, cantidad = ejecutar_scraper(parametros, callback=self.progress_callback)
@@ -287,7 +295,7 @@ class ScraperApp:
                 "Éxito", f"Se guardaron {cantidad} resultados en:\n{archivo}"
             )
         except Exception as e:
-            self.mostrar_error(e)
+            messagebox.showerror("Error durante el scraping", str(e))
         finally:
             self.buscar_btn.config(state=tk.NORMAL)
 

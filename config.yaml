@@ -1,9 +1,9 @@
-geocoder: nominatim                # nominatim | google | none
-radius_m: 1000                     # radio de búsqueda en metros
-limit: 100                         # máximo de negocios
-headless: true                     # selenium headless?
-proxies: []                        # ["ip:puerto", ...]
-user_agents:                       # lista de UAs para rotar
-  - Mozilla/5.0 (Windows NT 10.0; Win64; x64) …
-  - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) …
-timeout: 10                        # segundos para WebDriverWait / requests
+geocoder: nominatim
+headless: true
+limit: 100
+proxies: []
+radius_m: 1000
+timeout: 10
+user_agents:
+- Mozilla/5.0 (Windows NT 10.0; Win64; x64) …
+- Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) …

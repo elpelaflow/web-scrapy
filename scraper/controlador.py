@@ -24,7 +24,6 @@ def ejecutar_scraper(parametros: dict, callback=None) -> tuple[str, int]:
 
         formato = parametros.get("formato", "csv")
         ruta = parametros.get("ruta_salida", "data/resultados")
-        ruta = ruta.replace(" ", "_")
 
         headless = config.get("headless", True)
 
