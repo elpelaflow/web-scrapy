@@ -20,6 +20,9 @@ def crear_driver(headless: bool | None = None, proxy: str | None = None, user_ag
     headless_value = headless if headless is not None else config.get("headless", True)
     if headless_value:
         options.add_argument("--headless")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
     if proxy is None and config.get("proxies"):
         proxy = next(proxy_pool)
     if proxy:

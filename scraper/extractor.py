@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from fake_useragent import UserAgent
+from logs.debug_logger import logger
 from logs.descargas_log import registrar_error
 from .geocoder import geocode
 
@@ -34,7 +35,11 @@ def extraer_ficha(
     user_agent: str | None = None,
 ) -> dict:
     """Extrae los datos de la ficha de un negocio abierto en el driver."""
-    name = driver.find_element(By.CSS_SELECTOR, "h1.DUwDvf").text
+    try:
+        name = driver.find_element(By.CSS_SELECTOR, "h1[class*='section-hero-header-title']").text
+    except Exception as e:
+        logger.warning("No se pudo obtener el nombre: %s", e)
+        name = ""
     address = ""
     phone = ""
     website = ""

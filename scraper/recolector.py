@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from logs.debug_logger import logger
 
 from .extractor import extraer_ficha
 from .utils import backoff_retry
@@ -11,6 +12,16 @@ from .utils import backoff_retry
 @backoff_retry
 def _navegar(driver, url: str) -> None:
     driver.get(url)
+    try:
+        consent = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'button[aria-label="Aceptar todo"]')
+            )
+        )
+        consent.click()
+        time.sleep(1)
+    except Exception:
+        pass
 
 
 def recolectar_negocios(
@@ -44,9 +55,8 @@ def recolectar_negocios(
     search_box = driver.find_element(By.ID, "searchboxinput")
     search_box.send_keys(termino_busqueda)
     search_box.send_keys(Keys.ENTER)
-    # Esperar a que aparezca la lista de resultados
     try:
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.m6QErb")))
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pane [role='feed']")))
     except Exception:
         pass
     time.sleep(2)
@@ -54,10 +64,8 @@ def recolectar_negocios(
     # Realizar scroll dinámico hasta alcanzar el límite o no haya más resultados
     results: list = []
     try:
-        scrollable_div = driver.find_element(By.CSS_SELECTOR, "div.m6QErb")
-        results = driver.find_elements(By.CSS_SELECTOR, "div[role='article']")
-        if not results:
-            results = driver.find_elements(By.CSS_SELECTOR, "div.Nv2PK")
+        scrollable_div = driver.find_element(By.CSS_SELECTOR, "#pane [role='feed']")
+        results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
         prev_count = len(results)
 
         while len(results) < limite:
@@ -65,32 +73,19 @@ def recolectar_negocios(
                 "arguments[0].scrollTop = arguments[0].scrollHeight",
                 scrollable_div,
             )
-            try:
-                wait.until(
-                    lambda d: len(d.find_elements(By.CSS_SELECTOR, "div[role='article']")) > prev_count
-                )
-            except Exception:
+            time.sleep(2)
+            results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
+            new_count = len(results)
+            logger.info("Encontrados %d negocios tras scroll", new_count)
+            if new_count == prev_count:
                 break
-            results = driver.find_elements(By.CSS_SELECTOR, "div[role='article']")
-            if not results:
-                results = driver.find_elements(By.CSS_SELECTOR, "div.Nv2PK")
-            if len(results) == prev_count:
+            prev_count = new_count
+            if new_count >= limite:
                 break
-            prev_count = len(results)
     except Exception:
         pass
 
-    # Localizar los contenedores de cada negocio en la lista lateral
-    results = driver.find_elements(By.CSS_SELECTOR, "div[role='article']")
-    # Fallback por si la estructura cambia
-    if not results:
-        results = driver.find_elements(By.CSS_SELECTOR, "div.Nv2PK")
-    if not results:
-        try:
-            wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div[role='article']")))
-            results = driver.find_elements(By.CSS_SELECTOR, "div[role='article']")
-        except Exception:
-            pass
+    results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
     data = []
 
     for result in results[:limite]:

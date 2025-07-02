@@ -38,6 +38,8 @@ def main() -> None:
     }
     if args.ruta_salida:
         params["ruta_salida"] = args.ruta_salida
+    
+    print("Parámetros de búsqueda:", params)
 
     archivo, cantidad = ejecutar_scraper(params)
     print(f"Se guardaron {cantidad} resultados en: {archivo}")

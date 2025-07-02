@@ -282,6 +282,8 @@ class ScraperApp:
             "formato": self.formato_var.get(),
         }
         
+        print("Parámetros de búsqueda:", parametros)
+        
         ruta = getattr(self, "export_folder", None)
         if not ruta:
             messagebox.showwarning("Error", "Seleccioná primero la carpeta de destino")

@@ -35,6 +35,9 @@ def exportar_xml(data: list[dict], ruta: str, root_name="Negocios", item_name="N
 
 def exportar(data: list[dict], formato: str, ruta_base: str) -> str:
     """Exporta los datos al formato indicado en la carpeta dada."""
+    if not data:
+        logger.warning("No hay datos para exportar: data está vacío")
+        return ""
     carpeta_resultados = os.path.join(ruta_base, "web-scrapy-resultados")
     os.makedirs(carpeta_resultados, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
