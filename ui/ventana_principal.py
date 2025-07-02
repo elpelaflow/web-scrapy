@@ -212,7 +212,10 @@ class ScraperApp:
     def cargar_historial(self):
         ruta_log = Path("logs/solicitudes_log.csv")
         if ruta_log.exists():
-            df = pd.read_csv(ruta_log)
+            try:
+                df = pd.read_csv(ruta_log)
+            except pd.errors.ParserError:
+                df = pd.read_csv(ruta_log, engine="python", on_bad_lines="skip")
         else:
             df = pd.DataFrame(columns=self.history_columns)
         self.tree.delete(*self.tree.get_children())

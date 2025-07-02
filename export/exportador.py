@@ -7,7 +7,13 @@ from logs.debug_logger import logger
 
 def exportar_csv(data: list[dict], ruta: str):
     df = pd.DataFrame(data)
-    df.to_csv(ruta, index=False, encoding='utf-8')
+    df.to_csv(
+        ruta,
+        index=False,
+        encoding="utf-8",
+        quoting=csv.QUOTE_MINIMAL,
+        quotechar='"',
+    )
     logger.info("Exportado a CSV: %s", ruta)
 
 def exportar_excel(data: list[dict], ruta: str):

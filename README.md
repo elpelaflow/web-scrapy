@@ -53,6 +53,11 @@ La aplicación utiliza Tkinter por lo que se abre una ventana similar a la sigui
 
 En ella se completan los parámetros y se inicia la recolección.
 
+## Historial
+
+La pestaña de historial carga el archivo `logs/solicitudes_log.csv` omitiendo
+automáticamente las líneas corruptas que pudieran existir.
+
 ## Uso ético
 
 Utiliza esta herramienta únicamente para fines legales y con el permiso de los sitios que scrapees. El uso indebido puede violar los términos de servicio de las páginas y la legislación vigente.
