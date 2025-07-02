@@ -56,36 +56,45 @@ def recolectar_negocios(
     search_box.send_keys(termino_busqueda)
     search_box.send_keys(Keys.ENTER)
     try:
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pane [role='feed']")))
+        wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#pane [role='feed']"))
+        )
     except Exception:
         pass
     time.sleep(2)
 
     # Realizar scroll dinámico hasta alcanzar el límite o no haya más resultados
-    results: list = []
+    scrollable_div = None
     try:
-        scrollable_div = driver.find_element(By.CSS_SELECTOR, "#pane [role='feed']")
-        results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
-        prev_count = len(results)
-
-        while len(results) < limite:
-            driver.execute_script(
-                "arguments[0].scrollTop = arguments[0].scrollHeight",
-                scrollable_div,
-            )
-            time.sleep(2)
-            results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
-            new_count = len(results)
-            logger.info("Encontrados %d negocios tras scroll", new_count)
-            if new_count == prev_count:
-                break
-            prev_count = new_count
-            if new_count >= limite:
-                break
+        scrollable_div = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#pane [role='feed']"))
+        )
     except Exception:
-        pass
+        logger.error(
+            "No se encontró el contenedor de resultados en Maps", exc_info=True
+        )
+        return []
 
-    results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
+    results: list = scrollable_div.find_elements(
+        By.CSS_SELECTOR, "a[href*='/place/']"
+    )
+    prev_count = len(results)
+
+    while len(results) < limite:
+        driver.execute_script(
+            "arguments[0].scrollTop = arguments[0].scrollHeight",
+            scrollable_div,
+        )
+        time.sleep(2)
+        results = scrollable_div.find_elements(By.CSS_SELECTOR, "a[href*='/place/']")
+        new_count = len(results)
+        logger.info("Encontrados %d negocios tras scroll", new_count)
+        if new_count == prev_count:
+            break
+        prev_count = new_count
+        if new_count >= limite:
+            break
+
     data = []
 
     for result in results[:limite]:
